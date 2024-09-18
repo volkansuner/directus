@@ -251,33 +251,25 @@ function getWidth(input: unknown, fallback: number): number {
 </script>
 
 <template>
+	{{ navOpen }}
 	<v-info v-if="appAccess === false" center :title="t('no_app_access')" type="danger" icon="block">
 		{{ t('no_app_access_copy') }}
-
 		<template #append>
 			<v-button to="/logout">{{ t('switch_user') }}</v-button>
 		</template>
 	</v-info>
 
 	<div v-else class="private-view" :class="{ appearance, 'full-screen': fullScreen, splitView }">
-		<aside
-			id="navigation"
-			role="navigation"
-			aria-label="Module Navigation"
-			:class="{ 'is-open': navOpen, 'has-shadow': sidebarShadow }"
-		>
-			<module-bar />
+		<aside id="navigation" role="navigation" aria-label="Module Navigation"
+			:class="{ 'is-open': navOpen, 'has-shadow': sidebarShadow }">
+			<module-bar v-if='!userStore?.currentUser?.settings || userStore?.currentUser?.settings?.show_module_bar' />
 			<v-resizeable
-				v-model:width="navWidth"
-				:min-width="SIZES.minModuleNavWidth"
-				:max-width="maxWidthNav"
-				:options="navResizeOptions"
-				@dragging="(value) => (isDraggingNav = value)"
-				@transition-end="onNavTransitionEnd"
-			>
+				v-if='(!userStore?.currentUser?.settings || userStore?.currentUser?.settings?.show_navigation_bar)'
+				v-model:width="navWidth" :min-width="SIZES.minModuleNavWidth" :max-width="maxWidthNav"
+				:options="navResizeOptions" @dragging="(value) => (isDraggingNav = value)"
+				@transition-end="onNavTransitionEnd">
 				<div class="module-nav alt-colors">
 					<project-info />
-
 					<div class="module-nav-content">
 						<slot name="navigation" />
 					</div>
@@ -285,29 +277,18 @@ function getWidth(input: unknown, fallback: number): number {
 			</v-resizeable>
 		</aside>
 		<div id="main-content" ref="contentEl" class="content">
-			<header-bar
-				ref="headerBarEl"
-				:small="smallHeader || splitView"
-				:shadow="headerShadow || splitView"
-				show-sidebar-toggle
-				:title="title"
-				@toggle:sidebar="sidebarOpen = !sidebarOpen"
-				@primary="navOpen = !navOpen"
-			>
+			<header-bar ref="headerBarEl" :small="smallHeader || splitView" :shadow="headerShadow || splitView"
+				show-sidebar-toggle :title="title" @toggle:sidebar="sidebarOpen = !sidebarOpen"
+				@primary="navOpen = !navOpen">
 				<template v-for="(_, scopedSlotName) in $slots" #[scopedSlotName]="slotData">
 					<slot :name="scopedSlotName" v-bind="slotData" />
 				</template>
 			</header-bar>
 
 			<div class="content-wrapper">
-				<v-resizeable
-					v-model:width="mainWidth"
-					:min-width="SIZES.minContentWidth"
-					:max-width="maxWidthMain"
-					:disabled="!splitViewWritable"
-					:options="mainResizeOptions"
-					@dragging="(value) => (isDraggingMain = value)"
-				>
+				<v-resizeable v-model:width="mainWidth" :min-width="SIZES.minContentWidth" :max-width="maxWidthMain"
+					:disabled="!splitViewWritable" :options="mainResizeOptions"
+					@dragging="(value) => (isDraggingMain = value)">
 					<main v-show="showMain">
 						<slot />
 					</main>
@@ -318,15 +299,9 @@ function getWidth(input: unknown, fallback: number): number {
 				</div>
 			</div>
 		</div>
-		<aside
-			id="sidebar"
-			ref="sidebarEl"
-			role="contentinfo"
-			class="alt-colors"
-			aria-label="Module Sidebar"
-			:class="{ 'is-open': sidebarOpen, 'has-shadow': sidebarShadow }"
-			@click="openSidebar"
-		>
+		<aside v-if='!userStore?.currentUser?.settings || userStore?.currentUser?.settings?.show_sidebar' id="sidebar"
+			ref="sidebarEl" role="contentinfo" class="alt-colors" aria-label="Module Sidebar"
+			:class="{ 'is-open': sidebarOpen, 'has-shadow': sidebarShadow }" @click="openSidebar">
 			<div class="flex-container">
 				<sidebar-detail-group :sidebar-open="sidebarOpen">
 					<slot name="sidebar" />
@@ -495,19 +470,13 @@ function getWidth(input: unknown, fallback: number): number {
 
 		--theme--form--field--input--background-subdued: var(--theme--sidebar--section--form--field--input--background);
 		--theme--form--field--input--background: var(--theme--sidebar--section--form--field--input--background);
-		--theme--form--field--input--border-color-focus: var(
-			--theme--sidebar--section--form--field--input--border-color-focus
-		);
-		--theme--form--field--input--border-color-hover: var(
-			--theme--sidebar--section--form--field--input--border-color-hover
-		);
+		--theme--form--field--input--border-color-focus: var(--theme--sidebar--section--form--field--input--border-color-focus);
+		--theme--form--field--input--border-color-hover: var(--theme--sidebar--section--form--field--input--border-color-hover);
 		--theme--form--field--input--border-color: var(--theme--sidebar--section--form--field--input--border-color);
 		--theme--form--field--input--box-shadow-focus: var(--theme--sidebar--section--form--field--input--box-shadow-focus);
 		--theme--form--field--input--box-shadow-hover: var(--theme--sidebar--section--form--field--input--box-shadow-hover);
 		--theme--form--field--input--box-shadow: var(--theme--sidebar--section--form--field--input--box-shadow);
-		--theme--form--field--input--foreground-subdued: var(
-			--theme--sidebar--section--form--field--input--foreground-subdued
-		);
+		--theme--form--field--input--foreground-subdued: var(--theme--sidebar--section--form--field--input--foreground-subdued);
 		--theme--form--field--input--foreground: var(--theme--sidebar--section--form--field--input--foreground);
 		--theme--form--field--input--height: var(--theme--sidebar--section--form--field--input--height);
 		--theme--form--field--input--padding: var(--theme--sidebar--section--form--field--input--padding);
@@ -538,6 +507,7 @@ function getWidth(input: unknown, fallback: number): number {
 		&.is-open {
 			transform: translateX(0);
 		}
+
 		&.has-shadow {
 			box-shadow: var(--sidebar-shadow);
 		}

@@ -8,7 +8,7 @@ import sdk from './sdk';
 const api = axios.create({
 	baseURL: getRootPath(),
 	withCredentials: true,
-});
+		});
 
 export let requestQueue: PQueue = new PQueue({
 	concurrency: 5,

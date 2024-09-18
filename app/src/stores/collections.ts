@@ -19,7 +19,9 @@ export const useCollectionsStore = defineStore('collectionsStore', () => {
 
 	const visibleCollections = computed(() =>
 		collections.value
-			.filter(({ collection }) => isSystemCollection(collection) === false)
+			.filter(({ collection }) => {
+				return isSystemCollection(collection) === false 
+			})
 			.filter((collection) => collection.meta && collection.meta?.hidden !== true),
 	);
 
